@@ -1,0 +1,84 @@
+name: Build and Push TradingAgents-CN (Multi-Arch, Docker Hub + GHCR)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tradingagents-cn/**'
+      - '.github/workflows/tradingagents-cn-builder.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            build_arch: amd64
+          - arch: arm64
+            platform: linux/arm64
+            build_arch: aarch64
+
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      
+      
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_PAT }}
+      
+      - name: Get lowercase repo owner
+        run: echo "REPO_OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      
+      - name: Extract VERSION from config
+        id: extract_version
+        run: |
+          ADDON_DIR="tradingagents-cn"
+          CONFIG_PATH="${ADDON_DIR}/config.yaml"
+          
+          if [[ -f "$CONFIG_PATH" ]]; then
+            VERSION=$(yq e ".version" "$CONFIG_PATH")
+          else
+            echo "❌ ERROR: $CONFIG_PATH not found!"
+            exit 1
+          fi
+          
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BUILD_ARCH=${{ matrix.build_arch }}" >> $GITHUB_ENV
+          echo "💡 VERSION=$VERSION"
+          echo "💡 BUILD_ARCH=${{ matrix.build_arch }}"
+      
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build and push TradingAgents-CN for ${{ matrix.arch }}
+        uses: docker/build-push-action@v5
+        with:
+          context: tradingagents-cn
+          file: tradingagents-cn/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO_OWNER_LC }}/tradingagents-cn-${{ env.BUILD_ARCH }}:${{ env.VERSION }}
+          build-args: |
+            BUILD_FROM=ghcr.io/hassio-addons/base/${{ env.BUILD_ARCH }}:16.0.1
