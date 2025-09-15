@@ -1,3 +1,12 @@
+# ☕ 赞助支持
+
+如果您觉得我花费大量时间维护这个库对您有帮助，欢迎请我喝杯奶茶，您的支持将是我持续改进的动力！
+
+<div style="display: flex; justify-content: space-between;">
+  <img src="https://gitee.com/wuwzn/ha-addons/raw/master/0wwzn/Ali_Pay.jpg" height="350px" />
+  <img src="https://gitee.com/wuwzn/ha-addons/raw/master/0wwzn/WeChat_Pay.jpg" height="350px" />
+</div> 💖
+感谢您的支持与鼓励！
 # TradingAgents-CN Home Assistant 加载项使用说明
 
 ！！！！注意：此加载项对HA硬件要求 内存4GB+ RAM (推荐 8GB+)
@@ -259,5 +268,6 @@ redis_port: 6379
 ---
 
 🎉 **现在您可以开始使用TradingAgents-CN进行智能投资分析了！**
+
 
 记住：理性投资，风险自控，AI辅助决策而非替代决策。
