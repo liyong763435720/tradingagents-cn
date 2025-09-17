@@ -157,7 +157,7 @@ LABEL \
     io.hass.arch="${TARGETARCH}" \
     io.hass.type="addon" \
     io.hass.version="1.0.1" \
-    maintainer="liyong763435720"
+    maintainer="wuwweizn"
 
 # 直接启动应用
 CMD ["/usr/local/bin/start.sh"]
