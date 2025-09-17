@@ -1,6 +1,7 @@
+
 name: TradingAgents-CN
 description: 基于多智能体LLM的中文金融交易框架
-version: 1.0.2
+version: 1.0.3
 slug: tradingagents-cn
 init: false
 arch:
@@ -34,6 +35,7 @@ options:
   redis_host: localhost
   redis_port: 6379
   log_level: info
+  disable_auth: true
 
 schema:
   dashscope_api_key: str?
@@ -49,5 +51,6 @@ schema:
   redis_host: str
   redis_port: port
   log_level: list(trace|debug|info|notice|warning|error|fatal)
+  disable_auth: bool
 
 image: ghcr.io/liyong763435720/tradingagents-cn-{arch}
