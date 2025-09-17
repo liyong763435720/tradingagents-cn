@@ -1,0 +1,14 @@
+## 4. rootfs/etc/services.d/tradingagents/run - 服务启动脚本
+```bash
+#!/bin/bash
+
+echo "Starting TradingAgents-CN..."
+
+# 等待网络就绪（简单检查）
+sleep 5
+
+# 切换到工作目录
+cd /opt/tradingagents
+
+# 启动应用
+exec /usr/bin/start-tradingagents.sh
