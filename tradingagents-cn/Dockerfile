@@ -5,7 +5,7 @@ ENV LANG=C.UTF-8 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# 安装系统依赖 + pandoc
+# 只安装最基本的系统依赖 + pandoc
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 # 禁用pypandoc的自动下载功能
 ENV PYPANDOC_PANDOC=/usr/bin/pandoc
 
-# 创建启动脚本（包含 TUSHARE_TOKEN 支持）
+# 创建启动脚本
 RUN echo '#!/bin/bash\n\
 echo "Starting TradingAgents-CN..."\n\
 \n\
@@ -51,7 +51,7 @@ if [[ -f "$OPTIONS_FILE" ]]; then\n\
     REDIS_PORT=$(cat "$OPTIONS_FILE" | jq -r ".redis_port // 6379")\n\
     LOG_LEVEL=$(cat "$OPTIONS_FILE" | jq -r ".log_level // \"info\"")\n\
 else\n\
-    echo "No configuration file found, using defaults"\n\
+    echo "No configuration file found at $OPTIONS_FILE, using defaults"\n\
     DASHSCOPE_API_KEY=""\n\
     TUSHARE_TOKEN=""\n\
     FINNHUB_API_KEY=""\n\
@@ -91,27 +91,24 @@ MONGODB_PASSWORD=\n\
 REDIS_PASSWORD=\n\
 REDIS_DB=0\n\
 DOCKER_CONTAINER=true\n\
+DISABLE_AUTH=true\n\
+STREAMLIT_SERVER_HEADLESS=true\n\
 EOF\n\
 \n\
-# 显示配置信息\n\
+# 显示配置信息（隐藏敏感信息）\n\
 echo "Configuration summary:"\n\
-[[ -n "$DASHSCOPE_API_KEY" ]] && echo "- DASHSCOPE_API_KEY: ✅ Configured" || echo "- DASHSCOPE_API_KEY: ❌ Not configured"\n\
-[[ -n "$TUSHARE_TOKEN" ]] && echo "- TUSHARE_TOKEN: ✅ Configured (A股数据源)" || echo "- TUSHARE_TOKEN: ❌ Not configured"\n\
-[[ -n "$FINNHUB_API_KEY" ]] && echo "- FINNHUB_API_KEY: ✅ Configured (美股数据源)" || echo "- FINNHUB_API_KEY: ❌ Not configured"\n\
-[[ -n "$GOOGLE_API_KEY" ]] && echo "- GOOGLE_API_KEY: ✅ Configured" || echo "- GOOGLE_API_KEY: ❌ Not configured"\n\
-[[ -n "$OPENAI_API_KEY" ]] && echo "- OPENAI_API_KEY: ✅ Configured" || echo "- OPENAI_API_KEY: ❌ Not configured"\n\
-[[ -n "$ANTHROPIC_API_KEY" ]] && echo "- ANTHROPIC_API_KEY: ✅ Configured" || echo "- ANTHROPIC_API_KEY: ❌ Not configured"\n\
+[[ -n "$DASHSCOPE_API_KEY" ]] && echo "- DASHSCOPE_API_KEY: Configured" || echo "- DASHSCOPE_API_KEY: Not configured"\n\
+[[ -n "$TUSHARE_TOKEN" ]] && echo "- TUSHARE_TOKEN: Configured" || echo "- TUSHARE_TOKEN: Not configured"\n\
+[[ -n "$FINNHUB_API_KEY" ]] && echo "- FINNHUB_API_KEY: Configured" || echo "- FINNHUB_API_KEY: Not configured"\n\
 echo "- LOG_LEVEL: $LOG_LEVEL"\n\
-echo "- MONGODB_ENABLED: $MONGODB_ENABLED"\n\
-echo "- REDIS_ENABLED: $REDIS_ENABLED"\n\
 \n\
 # 确保数据目录存在\n\
 mkdir -p /data/tradingagents\n\
-echo "Data directory ready: /data/tradingagents"\n\
+echo "Data directory created: /data/tradingagents"\n\
 \n\
 # 启动应用\n\
 cd /opt/tradingagents\n\
-echo "Starting Streamlit application on port 8501..."\n\
+echo "Starting Streamlit application..."\n\
 exec python -m streamlit run web/app.py \\\n\
     --server.address 0.0.0.0 \\\n\
     --server.port 8501 \\\n\
@@ -139,7 +136,7 @@ LABEL \
     io.hass.arch="${TARGETARCH}" \
     io.hass.type="addon" \
     io.hass.version="1.0.1" \
-    maintainer="wuwweizn"
+    maintainer="liyong763435720"
 
 # 直接启动应用
 CMD ["/usr/local/bin/start.sh"]
