@@ -1,6 +1,6 @@
 name: TradingAgents-CN
 description: 基于多智能体LLM的中文金融交易框架
-version: 1.0.6
+version: 1.0.1
 slug: tradingagents-cn
 init: false
 arch:
@@ -50,5 +50,4 @@ schema:
   redis_port: port
   log_level: list(trace|debug|info|notice|warning|error|fatal)
 
-
-image: ghcr.nju.edu.cn/liyong763435720/tradingagents-cn-{arch}
+image: ghcr.io/wuwweizn/tradingagents-cn-{arch}
