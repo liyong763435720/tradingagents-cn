@@ -1,17 +1,25 @@
-FROM python:3.11-slim
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 # 设置环境变量
-ENV LANG=C.UTF-8 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+ENV LANG C.UTF-8
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# 只安装最基本的系统依赖 + pandoc
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 安装系统依赖 (Alpine Linux)
+RUN apk update && apk add --no-cache \
+    python3 \
+    python3-dev \
+    py3-pip \
     git \
     curl \
-    jq \
-    pandoc \
-    && rm -rf /var/lib/apt/lists/*
+    build-base \
+    libffi-dev \
+    openssl-dev \
+    gcc \
+    musl-dev \
+    linux-headers \
+    bash
 
 # 设置工作目录
 WORKDIR /opt/tradingagents
@@ -20,103 +28,26 @@ WORKDIR /opt/tradingagents
 RUN git clone https://github.com/hsliuping/TradingAgents-CN.git . && \
     git checkout main
 
+# 创建虚拟环境并安装依赖
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# 升级pip并安装wheel
+RUN pip install --upgrade pip setuptools wheel
+
 # 安装Python依赖
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pytdx && \
-    (pip install --no-cache-dir -r requirements_db.txt || echo "Database requirements optional")
+RUN pip install -r requirements.txt && \
+    pip install pytdx && \
+    (pip install -r requirements_db.txt || echo "Database requirements optional")
 
-# 禁用pypandoc的自动下载功能
-ENV PYPANDOC_PANDOC=/usr/bin/pandoc
+# 复制配置文件
+COPY rootfs /
 
-# 创建启动脚本
-RUN echo '#!/bin/bash\n\
-echo "Starting TradingAgents-CN..."\n\
-\n\
-# 解析配置\n\
-OPTIONS_FILE="/data/options.json"\n\
-if [[ -f "$OPTIONS_FILE" ]]; then\n\
-    echo "Loading configuration from $OPTIONS_FILE"\n\
-    DASHSCOPE_API_KEY=$(cat "$OPTIONS_FILE" | jq -r ".dashscope_api_key // \"\"")\n\
-    TUSHARE_TOKEN=$(cat "$OPTIONS_FILE" | jq -r ".tushare_token // \"\"")\n\
-    FINNHUB_API_KEY=$(cat "$OPTIONS_FILE" | jq -r ".finnhub_api_key // \"\"")\n\
-    GOOGLE_API_KEY=$(cat "$OPTIONS_FILE" | jq -r ".google_api_key // \"\"")\n\
-    OPENAI_API_KEY=$(cat "$OPTIONS_FILE" | jq -r ".openai_api_key // \"\"")\n\
-    ANTHROPIC_API_KEY=$(cat "$OPTIONS_FILE" | jq -r ".anthropic_api_key // \"\"")\n\
-    MONGODB_ENABLED=$(cat "$OPTIONS_FILE" | jq -r ".mongodb_enabled // false")\n\
-    REDIS_ENABLED=$(cat "$OPTIONS_FILE" | jq -r ".redis_enabled // false")\n\
-    MONGODB_HOST=$(cat "$OPTIONS_FILE" | jq -r ".mongodb_host // \"localhost\"")\n\
-    MONGODB_PORT=$(cat "$OPTIONS_FILE" | jq -r ".mongodb_port // 27017")\n\
-    REDIS_HOST=$(cat "$OPTIONS_FILE" | jq -r ".redis_host // \"localhost\"")\n\
-    REDIS_PORT=$(cat "$OPTIONS_FILE" | jq -r ".redis_port // 6379")\n\
-    LOG_LEVEL=$(cat "$OPTIONS_FILE" | jq -r ".log_level // \"info\"")\n\
-else\n\
-    echo "No configuration file found at $OPTIONS_FILE, using defaults"\n\
-    DASHSCOPE_API_KEY=""\n\
-    TUSHARE_TOKEN=""\n\
-    FINNHUB_API_KEY=""\n\
-    GOOGLE_API_KEY=""\n\
-    OPENAI_API_KEY=""\n\
-    ANTHROPIC_API_KEY=""\n\
-    MONGODB_ENABLED="false"\n\
-    REDIS_ENABLED="false"\n\
-    MONGODB_HOST="localhost"\n\
-    MONGODB_PORT="27017"\n\
-    REDIS_HOST="localhost"\n\
-    REDIS_PORT="6379"\n\
-    LOG_LEVEL="info"\n\
-fi\n\
-\n\
-# 创建.env文件\n\
-ENV_FILE="/opt/tradingagents/.env"\n\
-echo "Creating environment file at $ENV_FILE"\n\
-cat > "$ENV_FILE" <<EOF\n\
-DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}\n\
-TUSHARE_TOKEN=${TUSHARE_TOKEN}\n\
-FINNHUB_API_KEY=${FINNHUB_API_KEY}\n\
-GOOGLE_API_KEY=${GOOGLE_API_KEY}\n\
-OPENAI_API_KEY=${OPENAI_API_KEY}\n\
-ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}\n\
-MONGODB_ENABLED=${MONGODB_ENABLED}\n\
-REDIS_ENABLED=${REDIS_ENABLED}\n\
-MONGODB_HOST=${MONGODB_HOST}\n\
-MONGODB_PORT=${MONGODB_PORT}\n\
-REDIS_HOST=${REDIS_HOST}\n\
-REDIS_PORT=${REDIS_PORT}\n\
-TRADING_AGENTS_DATA_DIR=/data/tradingagents\n\
-LOG_LEVEL=${LOG_LEVEL}\n\
-MONGODB_DATABASE=trading_agents\n\
-MONGODB_USERNAME=\n\
-MONGODB_PASSWORD=\n\
-REDIS_PASSWORD=\n\
-REDIS_DB=0\n\
-DOCKER_CONTAINER=true\n\
-DISABLE_AUTH=true\n\
-STREAMLIT_SERVER_HEADLESS=true\n\
-EOF\n\
-\n\
-# 显示配置信息（隐藏敏感信息）\n\
-echo "Configuration summary:"\n\
-[[ -n "$DASHSCOPE_API_KEY" ]] && echo "- DASHSCOPE_API_KEY: Configured" || echo "- DASHSCOPE_API_KEY: Not configured"\n\
-[[ -n "$TUSHARE_TOKEN" ]] && echo "- TUSHARE_TOKEN: Configured" || echo "- TUSHARE_TOKEN: Not configured"\n\
-[[ -n "$FINNHUB_API_KEY" ]] && echo "- FINNHUB_API_KEY: Configured" || echo "- FINNHUB_API_KEY: Not configured"\n\
-echo "- LOG_LEVEL: $LOG_LEVEL"\n\
-\n\
-# 确保数据目录存在\n\
-mkdir -p /data/tradingagents\n\
-echo "Data directory created: /data/tradingagents"\n\
-\n\
-# 启动应用\n\
-cd /opt/tradingagents\n\
-echo "Starting Streamlit application..."\n\
-exec python -m streamlit run web/app.py \\\n\
-    --server.address 0.0.0.0 \\\n\
-    --server.port 8501 \\\n\
-    --server.headless true \\\n\
-    --server.enableCORS false \\\n\
-    --server.enableXsrfProtection false \\\n\
-    --server.fileWatcherType none\n\
-' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
+# 设置权限
+RUN chmod +x /etc/services.d/tradingagents/run && \
+    chmod +x /etc/services.d/tradingagents/finish && \
+    chmod +x /etc/cont-init.d/01-setup.sh && \
+    chmod +x /usr/bin/start-tradingagents.sh
 
 # 创建数据目录
 RUN mkdir -p /data/tradingagents && \
@@ -135,8 +66,5 @@ LABEL \
     io.hass.description="基于多智能体LLM的中文金融交易框架" \
     io.hass.arch="${TARGETARCH}" \
     io.hass.type="addon" \
-    io.hass.version="1.0.1" \
+    io.hass.version="1.0.0" \
     maintainer="liyong763435720"
-
-# 直接启动应用
-CMD ["/usr/local/bin/start.sh"]
