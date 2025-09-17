@@ -5,5 +5,5 @@ build_from:
 labels:
   org.opencontainers.image.title: TradingAgents-CN
   org.opencontainers.image.description: 基于多智能体LLM的中文金融交易框架
-  org.opencontainers.image.source: https://github.com/liyong763435720/tradingagents-cn
+  org.opencontainers.image.source: https://github.com/wuwweizn/wwzn-china
   org.opencontainers.image.licenses: Apache-2.0
