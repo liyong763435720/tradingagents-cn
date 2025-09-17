@@ -1,7 +1,6 @@
-
-name: TradingAgents-CN
-description: 基于多智能体LLM的中文金融交易框架
-version: 1.0.3
+name: "TradingAgents-CN"
+description: "基于多智能体LLM的中文金融交易框架"
+version: "1.0.4"
 slug: tradingagents-cn
 init: false
 arch:
@@ -14,12 +13,14 @@ hassio_api: true
 hassio_role: default
 homeassistant_api: false
 host_network: false
+privileged: false
+tmpfs: false
 
 ports:
   8501/tcp: 8501
 
 ports_description:
-  8501/tcp: TradingAgents Web UI
+  8501/tcp: "TradingAgents Web UI"
 
 options:
   dashscope_api_key: ""
@@ -35,7 +36,6 @@ options:
   redis_host: localhost
   redis_port: 6379
   log_level: info
-  disable_auth: true
 
 schema:
   dashscope_api_key: str?
@@ -51,6 +51,5 @@ schema:
   redis_host: str
   redis_port: port
   log_level: list(trace|debug|info|notice|warning|error|fatal)
-  disable_auth: bool
 
 image: ghcr.io/liyong763435720/tradingagents-cn-{arch}
