@@ -50,4 +50,5 @@ schema:
   redis_port: port
   log_level: list(trace|debug|info|notice|warning|error|fatal)
 
-image: ghcr.io/wuwweizn/tradingagents-cn-{arch}
+image: ghcr.nju.edu.cn/wuwweizn/tradingagents-cn-{arch}
+
