@@ -94,34 +94,16 @@ DOCKER_CONTAINER=true\n\
 EOF\n\
 \n\
 # 显示配置信息\n\
-echo "=== TradingAgents-CN Configuration ===="n\
-echo "🤖 AI Models:"\n\
-[[ -n "$DASHSCOPE_API_KEY" ]] && echo "  ✅ 阿里百炼 (Dashscope) - 已配置" || echo "  ❌ 阿里百炼 (Dashscope) - 未配置 [必需]"\n\
-[[ -n "$GOOGLE_API_KEY" ]] && echo "  ✅ Google AI - 已配置" || echo "  ⚪ Google AI - 未配置 [可选]"\n\
-[[ -n "$OPENAI_API_KEY" ]] && echo "  ✅ OpenAI - 已配置" || echo "  ⚪ OpenAI - 未配置 [可选]"\n\
-[[ -n "$ANTHROPIC_API_KEY" ]] && echo "  ✅ Anthropic - 已配置" || echo "  ⚪ Anthropic - 未配置 [可选]"\n\
-echo ""\n\
-echo "📊 Data Sources:"\n\
-[[ -n "$TUSHARE_TOKEN" ]] && echo "  ✅ Tushare - 已配置 (支持A股、港股等中国市场)" || echo "  ⚪ Tushare - 未配置 (A股数据源)"\n\
-[[ -n "$FINNHUB_API_KEY" ]] && echo "  ✅ FinnHub - 已配置 (支持美股等全球市场)" || echo "  ⚪ FinnHub - 未配置 (美股数据源)"\n\
-echo ""\n\
-# 检查数据源配置状态\n\
-if [[ -n "$TUSHARE_TOKEN" && -n "$FINNHUB_API_KEY" ]]; then\n\
-    echo "🌍 支持全球股票分析 (A股 + 美股)"\n\
-elif [[ -n "$TUSHARE_TOKEN" ]]; then\n\
-    echo "🇨🇳 支持中国市场分析 (A股、港股等)"\n\
-elif [[ -n "$FINNHUB_API_KEY" ]]; then\n\
-    echo "🇺🇸 支持美股等全球市场分析"\n\
-else\n\
-    echo "⚠️  警告: 未配置任何数据源API，股票数据获取可能受限"\n\
-    echo "💡 建议: 配置 tushare_token (A股) 或 finnhub_api_key (美股)"\n\
-fi\n\
-echo ""\n\
-echo "⚙️  Other Settings:"\n\
-echo "  - LOG_LEVEL: $LOG_LEVEL"\n\
-echo "  - MONGODB_ENABLED: $MONGODB_ENABLED"\n\
-echo "  - REDIS_ENABLED: $REDIS_ENABLED"\n\
-echo "======================================"\n\
+echo "Configuration summary:"\n\
+[[ -n "$DASHSCOPE_API_KEY" ]] && echo "- DASHSCOPE_API_KEY: ✅ Configured" || echo "- DASHSCOPE_API_KEY: ❌ Not configured"\n\
+[[ -n "$TUSHARE_TOKEN" ]] && echo "- TUSHARE_TOKEN: ✅ Configured (A股数据源)" || echo "- TUSHARE_TOKEN: ❌ Not configured"\n\
+[[ -n "$FINNHUB_API_KEY" ]] && echo "- FINNHUB_API_KEY: ✅ Configured (美股数据源)" || echo "- FINNHUB_API_KEY: ❌ Not configured"\n\
+[[ -n "$GOOGLE_API_KEY" ]] && echo "- GOOGLE_API_KEY: ✅ Configured" || echo "- GOOGLE_API_KEY: ❌ Not configured"\n\
+[[ -n "$OPENAI_API_KEY" ]] && echo "- OPENAI_API_KEY: ✅ Configured" || echo "- OPENAI_API_KEY: ❌ Not configured"\n\
+[[ -n "$ANTHROPIC_API_KEY" ]] && echo "- ANTHROPIC_API_KEY: ✅ Configured" || echo "- ANTHROPIC_API_KEY: ❌ Not configured"\n\
+echo "- LOG_LEVEL: $LOG_LEVEL"\n\
+echo "- MONGODB_ENABLED: $MONGODB_ENABLED"\n\
+echo "- REDIS_ENABLED: $REDIS_ENABLED"\n\
 \n\
 # 确保数据目录存在\n\
 mkdir -p /data/tradingagents\n\
